@@ -345,6 +345,7 @@ async def handle_reset(bot: Bot, ev: Event):
 
 
 @sv.on_command('🦌', block=True)
+@sv.on_command('鹿', block=True)
 async def handle_sign(bot: Bot, ev: Event):
     state = _load_state()
     user_key = _get_user_key(ev)
