@@ -17,7 +17,6 @@ from gsuid_core.logger import logger
 from gsuid_core.models import Event
 from gsuid_core.sv import Plugins, SV
 
-from . import upload  # noqa: F401 - 加载上传切图模块
 
 try:
     from playwright.async_api import async_playwright
