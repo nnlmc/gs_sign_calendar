@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>签到帮助</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', 'Noto Sans SC', sans-serif;
+      background: transparent;
+    }
+
+    .container {
+      width: 820px;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 50%, #f0f4ff 100%);
+      {% if bg_image %}
+      background: url('{{ bg_image }}') center/cover no-repeat;
+      {% endif %}
+      position: relative;
+    }
+
+    {% if bg_image %}
+    .container::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.75);
+      border-radius: inherit;
+    }
+
+    .container > * {
+      position: relative;
+      z-index: 1;
+    }
+    {% endif %}
+
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #2d3748;
+      letter-spacing: 0.02em;
+    }
+
+    .header p {
+      font-size: 15px;
+      color: #718096;
+      margin-top: 8px;
+    }
+
+    .section {
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 16px;
+      padding: 24px 28px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .cmd-list {
+      list-style: none;
+    }
+
+    .cmd-list li {
+      display: flex;
+      align-items: baseline;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f4f8;
+    }
+
+    .cmd-list li:last-child {
+      border-bottom: none;
+    }
+
+    .cmd-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #48bb78;
+      min-width: 200px;
+      flex-shrink: 0;
+    }
+
+    .cmd-desc {
+      font-size: 15px;
+      color: #4a5568;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff;
+      background: #ed8936;
+      border-radius: 4px;
+      padding: 2px 6px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .tip {
+      font-size: 14px;
+      color: #718096;
+      line-height: 1.7;
+      margin-top: 8px;
+    }
+
+    .footer {
+      margin-top: auto;
+      padding-top: 16px;
+      text-align: center;
+      font-size: 12px;
+      color: #a0aec0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🦌 签到日历 帮助</h1>
+      <p>每天签到开盲盒，集齐图鉴吧</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">基础命令</div>
+      <ul class="cmd-list">
+        <li>
+          <span class="cmd-name">🦌</span>
+          <span class="cmd-desc">每日签到，随机开出一张盲盒图片</span>
+        </li>
+        <li>
+          <span class="cmd-name">🦌日历 / 签到日历</span>
+          <span class="cmd-desc">查看本月签到日历和已开盲盒</span>
+        </li>
+        <li>
+          <span class="cmd-name">🦌帮助 / 鹿帮助</span>
+          <span class="cmd-desc">显示本帮助信息</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">主人命令 <span class="badge">仅主人</span></div>
+      <ul class="cmd-list">
+        <li>
+          <span class="cmd-name">🦌满</span>
+          <span class="cmd-desc">一键签满本月所有天数</span>
+        </li>
+        <li>
+          <span class="cmd-name">🦌重置</span>
+          <span class="cmd-desc">重置本期所有用户的签到记录</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">说明</div>
+      <p class="tip">
+        · 每天只能签到一次，重复签到会显示当前日历<br>
+        · 每月签到图片随机分配，同月内每天不重复<br>
+        · 主人重置后图片排列会重新洗牌
+      </p>
+    </div>
+
+    <div class="footer">
+      Powered by 娜娜莉 · site.nnlmc.top
+    </div>
+  </div>
+</body>
+</html>
