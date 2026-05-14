@@ -23,7 +23,7 @@ def _count_pool_images() -> int:
     if not SIGN_IMAGES_DIR.exists():
         return 0
     count = 0
-    for f in SIGN_IMAGES_DIR.iterdir():
+    for f in SIGN_IMAGES_DIR.rglob('*'):
         if f.is_file() and f.suffix.lower() in ('.png', '.jpg', '.jpeg', '.webp', '.gif'):
             count += 1
     return count
@@ -47,8 +47,8 @@ async def handle_delete_images(bot: Bot, ev: Event):
         return
 
     deleted = 0
-    for f in SIGN_IMAGES_DIR.iterdir():
-        if f.is_file() and keyword in f.stem:
+    for f in SIGN_IMAGES_DIR.rglob('*'):
+        if f.is_file() and keyword in f.stem and f.suffix.lower() in ('.png', '.jpg', '.jpeg', '.webp', '.gif'):
             f.unlink()
             deleted += 1
 

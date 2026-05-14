@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import random
 from pathlib import Path
 from typing import Optional
 
@@ -35,7 +36,6 @@ help_templates = Environment(
 
 
 def _get_bg_data_uri() -> str:
-    import random
     if not BG_DIR.exists():
         return ''
     bgs = [

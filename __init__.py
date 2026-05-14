@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import base64
 import random
@@ -51,6 +52,7 @@ sign_templates = Environment(
 )
 
 QQ_AVATAR_URL = 'http://q1.qlogo.cn/g?b=qq&nk={qid}&s=640'
+_STATE_LOCK = asyncio.Lock()
 
 # 盲盒 SVG - 圆润可爱盲盒风格
 MYSTERY_BOX_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
@@ -124,11 +126,11 @@ def _scan_sign_images() -> List[Path]:
     if not SIGN_IMAGES_DIR.exists():
         return images
     for f in SIGN_IMAGES_DIR.iterdir():
-        if f.is_file() and f.suffix.lower() in ('.png', '.jpg', '.jpeg', '.webp'):
+        if f.is_file() and f.suffix.lower() in ('.png', '.jpg', '.jpeg', '.webp', '.gif'):
             images.append(f)
         elif f.is_dir():
             for sf in f.iterdir():
-                if sf.is_file() and sf.suffix.lower() in ('.png', '.jpg', '.jpeg', '.webp'):
+                if sf.is_file() and sf.suffix.lower() in ('.png', '.jpg', '.jpeg', '.webp', '.gif'):
                     images.append(sf)
     return sorted(images, key=lambda p: p.name)
 
@@ -147,7 +149,13 @@ def _get_image_for_day(user_id: str, year: int, month: int, day: int, images: Li
         data = img_path.read_bytes()
         b64 = base64.b64encode(data).decode('ascii')
         suffix = img_path.suffix.lower()
-        mime = {'.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp'}.get(suffix, 'image/png')
+        mime = {
+            '.png': 'image/png',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.webp': 'image/webp',
+            '.gif': 'image/gif',
+        }.get(suffix, 'image/png')
         return f'data:{mime};base64,{b64}'
     except Exception:
         return _get_mystery_box_data_uri()
@@ -302,15 +310,16 @@ async def handle_sign_full(bot: Bot, ev: Event):
         await bot.send('只有 bot 主人可以使用此命令')
         return
 
-    state = _load_state()
-    user_key = _get_user_key(ev)
-    month_key = _get_month_key()
-    now = datetime.now()
-    days_in_month = calendar.monthrange(now.year, now.month)[1]
+    async with _STATE_LOCK:
+        state = _load_state()
+        user_key = _get_user_key(ev)
+        month_key = _get_month_key()
+        now = datetime.now()
+        days_in_month = calendar.monthrange(now.year, now.month)[1]
 
-    user_data = state.setdefault(user_key, {})
-    user_data[month_key] = list(range(1, days_in_month + 1))
-    _save_state(state)
+        user_data = state.setdefault(user_key, {})
+        user_data[month_key] = list(range(1, days_in_month + 1))
+        _save_state(state)
 
     context = _build_calendar_context(ev, state)
     image = await _render_calendar(context)
@@ -326,45 +335,50 @@ async def handle_reset(bot: Bot, ev: Event):
         await bot.send('只有 bot 主人可以使用此命令')
         return
 
-    state = _load_state()
-    month_key = _get_month_key()
+    async with _STATE_LOCK:
+        state = _load_state()
+        month_key = _get_month_key()
 
-    # 清除所有用户本月签到记录
-    count = 0
-    for user_key in list(state.keys()):
-        if user_key.startswith('_'):
-            continue
-        if isinstance(state[user_key], dict) and month_key in state[user_key]:
-            del state[user_key][month_key]
-            count += 1
+        # 清除所有用户本月签到记录
+        count = 0
+        for user_key in list(state.keys()):
+            if user_key.startswith('_'):
+                continue
+            if isinstance(state[user_key], dict) and month_key in state[user_key]:
+                del state[user_key][month_key]
+                count += 1
+                if not state[user_key]:
+                    del state[user_key]
 
-    # 递增 shuffle_seed，让图片排列重新洗牌
-    state['_shuffle_seed'] = state.get('_shuffle_seed', 0) + 1
+        # 递增 shuffle_seed，让图片排列重新洗牌
+        state['_shuffle_seed'] = state.get('_shuffle_seed', 0) + 1
 
-    _save_state(state)
+        _save_state(state)
+
     await bot.send(f'已重置本月签到记录，清除了 {count} 位用户的数据')
 
 
 @sv.on_command('🦌', block=True)
 @sv.on_command('鹿', block=True)
 async def handle_sign(bot: Bot, ev: Event):
-    state = _load_state()
-    user_key = _get_user_key(ev)
-    month_key = _get_month_key()
-    today = _get_today_day()
+    async with _STATE_LOCK:
+        state = _load_state()
+        user_key = _get_user_key(ev)
+        month_key = _get_month_key()
+        today = _get_today_day()
 
-    signed_days = _get_user_signs(state, user_key, month_key)
-    if today in signed_days:
-        context = _build_calendar_context(ev, state)
-        image = await _render_calendar(context)
-        if image:
-            await bot.send(image)
-        else:
-            await bot.send(f'今天已经签到过了！本月已签到 {len(signed_days)} 天')
-        return
+        signed_days = _get_user_signs(state, user_key, month_key)
+        if today in signed_days:
+            context = _build_calendar_context(ev, state)
+            image = await _render_calendar(context)
+            if image:
+                await bot.send(image)
+            else:
+                await bot.send(f'今天已经签到过了！本月已签到 {len(signed_days)} 天')
+            return
 
-    _do_sign(state, user_key, month_key, today)
-    _save_state(state)
+        _do_sign(state, user_key, month_key, today)
+        _save_state(state)
 
     context = _build_calendar_context(ev, state)
     image = await _render_calendar(context)
@@ -379,7 +393,8 @@ async def handle_sign(bot: Bot, ev: Event):
 @sv.on_command('签到日历', block=True)
 @sv.on_command('🦌日历', block=True)
 async def handle_calendar(bot: Bot, ev: Event):
-    state = _load_state()
+    async with _STATE_LOCK:
+        state = _load_state()
     context = _build_calendar_context(ev, state)
     image = await _render_calendar(context)
     if image:
