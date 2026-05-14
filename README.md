@@ -10,6 +10,14 @@
 - 自定义盲盒图片池（`sign_images` 目录）
 - 主人管理命令
 
+## 功能展示
+
+下面是签到日历渲染效果示例：
+
+![签到日历演示](docs/sign-calendar-demo.png)
+
+> 请将截图保存为 `gs_sign_calendar/docs/sign-calendar-demo.png`，文档将自动展示该效果图。
+
 ## 指令列表
 
 | 指令 | 说明 | 权限 |
